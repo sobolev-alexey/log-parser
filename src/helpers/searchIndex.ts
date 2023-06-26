@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { StringOrMap } from "../types";
 
 // Recursively count all search queries of the nested map
