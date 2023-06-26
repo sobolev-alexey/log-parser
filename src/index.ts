@@ -2,7 +2,7 @@
 import 'dotenv/config';
 import { Worker } from 'worker_threads';
 import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
-import { countQueriesHelper } from './helpers/searchIndex';
+import { processSearchQuery } from './routes/countQueries';
 
 /*
   File processing & indexing
@@ -62,7 +62,7 @@ async function countQueriesHandler(
     }
 
     const { date } = request.params;
-    const count = await countQueriesHelper(date, index);
+    const count = await processSearchQuery(date, index);
     reply.code(200).send({ count });
   } catch (error) {
     reply.code(500).send({ error: 'Internal Server Error' });

@@ -1,3 +1,5 @@
+import { parentPort, workerData } from 'worker_threads';
+
 // Function to count distinct queries within a specific time range
 function countDistinctQueries(indexMap: Map<string, Set<string>>, dateString: string) {
   const distinctQueries = new Set<string>();
@@ -75,12 +77,12 @@ function binarySearchByKey<K, V>(map: Map<K, V>, searchKey: K): number | undefin
 }
 
 // API route handler
-export function countQueriesHelper(datePrefix: string, index: Map<string, Set<string>>): number {
+export async function countQueriesHelper(): Promise<number> {
   try {
     const indexLookup = "Index lookup";
     console.time(indexLookup);
 
-    const count = countDistinctQueries(index, decodeURIComponent(datePrefix))
+    const count = countDistinctQueries(workerData.index, decodeURIComponent(workerData.datePrefix))
     console.log('Distinct queries:', count);
 
     console.timeEnd(indexLookup);
@@ -92,3 +94,14 @@ export function countQueriesHelper(datePrefix: string, index: Map<string, Set<st
     throw error;
   }
 }
+
+// Process the log file and build the index
+countQueriesHelper()
+  .then((count) => {
+    // Notify the parent process that the index traversing is completed
+    parentPort?.postMessage(count);
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
