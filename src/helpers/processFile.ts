@@ -1,6 +1,12 @@
+import 'dotenv/config';
 import fs from 'fs';
 import zlib from "zlib";
 import readline from 'readline';
+import { parentPort } from 'worker_threads';
+
+/* This is the worker thread */
+
+const logFilePath = process.env.LOG_FILE || 'hn_logs.tsv.gz';
 
 function quickSortMapEntriesByKey<K, V>(map: Map<K, V>): Map<K, V> {
   const entries = Array.from(map.entries());
@@ -96,3 +102,16 @@ export function processLogFile(filePath: string) {
     });
   });
 }
+
+
+// Process the log file and build the index
+processLogFile(logFilePath)
+  .then((index) => {
+    // Notify the parent process that the indexing is completed
+    parentPort?.postMessage(index);
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+

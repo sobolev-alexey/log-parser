@@ -1,26 +1,36 @@
 /* eslint-disable no-console */
 import 'dotenv/config';
+import { Worker } from 'worker_threads';
 import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import { countQueriesHelper } from './helpers/searchIndex';
-import { processLogFile } from './helpers/processFile';
 
 /*
   File processing & indexing
 */
-const logFilePath = process.env.LOG_FILE || 'hn_logs.tsv.gz';
-
 let index = new Map<string, Set<string>>();
 
-// Process the log file and build the index
-processLogFile(logFilePath)
-  .then((dataIndex: any) => {
-    // Update index
-    index = dataIndex;
-  })
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+const invokeWorker = "Invoke worker";
+console.time(invokeWorker);
+
+// Start the worker thread to process the log file
+const worker = new Worker('./src/helpers/processFile.ts');
+
+worker.on('message', (dataIndex) => {
+  // The worker has finished processing the log file and returned the index
+  // Now we can handle incoming HTTP requests to count distinct queries
+  index = dataIndex; // Update index
+});
+
+worker.on('error', (err) => {
+  console.error(err);
+});
+
+worker.on('exit', (code) => {
+  if (code !== 0) {
+    console.error(`Worker stopped with exit code ${code}`);
+  }
+  console.timeEnd(invokeWorker);
+});
 
 
 /*
