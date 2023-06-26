@@ -1,54 +1,86 @@
-import { StringOrMap } from "../types";
+// Function to count distinct queries within a specific time range
+function countDistinctQueries(indexMap: Map<string, Set<string>>, dateString: string) {
+  const distinctQueries = new Set<string>();
 
-// Recursively count all search queries of the nested map
-function countNestedElements(obj: Map<string, any> | Set<string>): Set<string> {
-  try {
-    if (obj instanceof Map) {
-      const distinctQueries = new Set<string>();
+  // construct full timestamp of the start date to use as lower bound for the lookup
+  const [
+    yearStart = dateString, monthStart = "01", dayStart = "01", hourStart = "00", minuteStart = "00", secondStart = "00"
+  ] = dateString.split(/-| |:/);
+  const dateStart = `${[yearStart, monthStart, dayStart].join("-")} ${[hourStart, minuteStart, secondStart].join(":")}`;
 
-      for (const value of obj.values()) {
+  // construct full timestamp of the end date to use as upper bound for the lookup
+  const [
+    yearEnd = dateString, monthEnd = "12", dayEnd = "31", hourEnd = "23", minuteEnd = "59", secondEnd= "59"
+  ] = dateString.split(/-| |:/);
+  const dateEnd = `${[yearEnd, monthEnd, dayEnd].join("-")} ${[hourEnd, minuteEnd, secondEnd].join(":")}`;
 
-        // countNestedElements(value) - after returning from a recursive function 
-        // this will contain a Set of distinct queries made within a second  
+  // Convert map keys into array
+  const keys = Array.from(indexMap.keys());
 
-        // Process the set values and add them 
-        // into a set of queries to filter out duplicates
-        for (const item of countNestedElements(value).values()) {
-          distinctQueries.add(item);
+  // Check edge cases for early return to reduce computation load
+  if (dateEnd < keys[0] || dateStart > keys[keys.length - 1]) {
+    return 0;
+  }
+
+  // Determine index of the first array item, relevant for the query, 
+  // It's going to be either index of the dateStart 
+  // or the index of a next available entry which should have follow the dateStart.
+  const startIndex = binarySearchByKey(indexMap, dateStart);
+
+  // Determine index of the last array item, relevant for the query, 
+  // It's going to be either index of the dateEnd 
+  // or the index of a next available entry which should have follow the dateEnd.
+  const endIndex = binarySearchByKey(indexMap, dateEnd) || keys.length;
+
+  // To not process the entire array, we only process sorted items between dateStart and dateEnd values
+  for (let i: any = startIndex; i <= endIndex; i++) {
+    const key = keys[i];
+    if (key >= dateStart && key <= dateEnd) {
+      const queries = indexMap.get(key);
+      if (queries) {
+          for (const query of queries) {
+          distinctQueries.add(query);
         }
       }
-      return distinctQueries;
     }
-    return obj;
-  } catch (error) {
-    throw error;
   }
+
+  return distinctQueries.size;
 }
 
-function countDistinctResults(index: Map<string, StringOrMap>, startDate: string) {
-  // Apply Regex to split timestamp by multiple separators
-  const splitDate = startDate.split(/-| |:/); // e.g. ["2015", "08", "01", "00", "04"]
 
-  let searchResult: any = index;
-  splitDate?.forEach((dateParam: string) => {
-    if (searchResult?.get(dateParam)) {
-      // Narrow down the deep most node within the index, 
-      // from where the counting should begin
-      // e.g. index[2015][08][03][00][04] - this will reduce lookup only to a very deep node within the tree
-      searchResult = searchResult.get(dateParam); 
+function binarySearchByKey<K, V>(map: Map<K, V>, searchKey: K): number | undefined {
+  const keys = Array.from(map.keys());
+  let left = 0;
+  let right = keys.length - 1;
+  let result: number | undefined = undefined;
+
+  while (left <= right) {
+    const middle = Math.floor((left + right) / 2);
+    const currentKey = keys[middle];
+
+    if (currentKey === searchKey) {
+      return middle;
     }
-  });
-  const distinctQueries = countNestedElements(searchResult);
-  return distinctQueries?.size || 0;
+    
+    if (currentKey < searchKey) {
+      left = middle + 1;
+    } else {
+      result = keys.indexOf(currentKey);
+      right = middle - 1;
+    }
+  }
+
+  return result ?? 0;
 }
 
 // API route handler
-export function countQueriesHelper(datePrefix: string, index: Map<string, StringOrMap>): number {
+export function countQueriesHelper(datePrefix: string, index: Map<string, Set<string>>): number {
   try {
     const indexLookup = "Index lookup";
     console.time(indexLookup);
 
-    const count = countDistinctResults(index, decodeURIComponent(datePrefix))
+    const count = countDistinctQueries(index, decodeURIComponent(datePrefix))
     console.log('Distinct queries:', count);
 
     console.timeEnd(indexLookup);
