@@ -25,7 +25,7 @@ function countNestedElements(obj: Map<string, any> | Set<string>): Set<string> {
   }
 }
 
-function countDistinctResults(index: Map<string, StringOrMap>, startDate: string) {
+export function countDistinctResults(index: Map<string, StringOrMap>, startDate: string) {
   // Apply Regex to split timestamp by multiple separators
   const splitDate = startDate.split(/-| |:/); // e.g. ["2015", "08", "01", "00", "04"]
 
