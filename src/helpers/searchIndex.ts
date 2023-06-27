@@ -1,5 +1,5 @@
 // Function to count distinct queries within a specific time range
-function countDistinctQueries(indexMap: Map<string, Set<string>>, dateString: string) {
+export function countDistinctResults(indexMap: Map<string, Set<string>>, dateString: string) {
   const distinctQueries = new Set<string>();
 
   // construct full timestamp of the start date to use as lower bound for the lookup
@@ -80,7 +80,7 @@ export function countQueriesHelper(datePrefix: string, index: Map<string, Set<st
     const indexLookup = "Index lookup";
     console.time(indexLookup);
 
-    const count = countDistinctQueries(index, decodeURIComponent(datePrefix))
+    const count = countDistinctResults(index, decodeURIComponent(datePrefix))
     console.log('Distinct queries:', count);
 
     console.timeEnd(indexLookup);

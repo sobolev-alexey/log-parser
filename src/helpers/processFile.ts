@@ -42,7 +42,7 @@ function quickSortMapEntriesByKey<K, V>(map: Map<K, V>): Map<K, V> {
 
 
 // Function to process the log file and build the index
-export function processLogFile(filePath: string) {
+export function processLogFile(filePath: string): Promise<Map<string, any>> {
   let lines = 0;
   const index = new Map();
 
