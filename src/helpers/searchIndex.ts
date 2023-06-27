@@ -1,4 +1,4 @@
-import { StringOrMap } from "../types";
+import { StringOrMap } from "../index.d";
 
 // Recursively count all search queries of the nested map
 function countNestedElements(obj: Map<string, any> | Set<string>): Set<string> {
@@ -31,15 +31,18 @@ export function countDistinctResults(index: Map<string, StringOrMap>, startDate:
 
   let searchResult: any = index;
   splitDate?.forEach((dateParam: string) => {
-    if (searchResult?.get(dateParam)) {
+    try {
       // Narrow down the deep most node within the index, 
       // from where the counting should begin
       // e.g. index[2015][08][03][00][04] - this will reduce lookup only to a very deep node within the tree
-      searchResult = searchResult.get(dateParam); 
+      searchResult = searchResult?.get(dateParam); 
+    } catch (error) {
+      return 0;
     }
   });
   const distinctQueries = countNestedElements(searchResult);
   return distinctQueries?.size || 0;
+
 }
 
 // API route handler

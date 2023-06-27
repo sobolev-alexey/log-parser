@@ -15,7 +15,7 @@ function getOrCreateMap(map: Map<string, any>, key: string) {
 }
 
 // Function to process the log file and build the index
-export function processLogFile(filePath: string) {
+export function processLogFile(filePath: string): Promise<Map<string, any>> {
   let lines = 0;
   const index = new Map<string, any>();
 

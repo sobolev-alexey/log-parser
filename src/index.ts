@@ -3,7 +3,8 @@ import 'dotenv/config';
 import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import { countQueriesHelper } from './helpers/searchIndex';
 import { processLogFile } from './helpers/processFile';
-import { StringOrMap } from "./types";
+import { StringOrMap } from './index.d';
+import { isValidDateFormat } from './helpers/checkDateFormat';
 
 /*
   File processing & indexing
@@ -49,12 +50,17 @@ async function countQueriesHandler(
 ): Promise<void> {
   try {
     if (index.size === 0) {
-      reply.code(425).send({ message: 'Indexing in progress' });
+      reply.code(425).send({ message: 'Indexing in progress, please repeat your request later' });
     }
 
     const { date } = request.params;
-    const count = await countQueriesHelper(date, index);
-    reply.code(200).send({ count });
+
+    if (isValidDateFormat(date)) {
+      const count = await countQueriesHelper(date, index);
+      reply.code(200).send({ count });
+    } else {
+      reply.code(403).send({ error: 'Invalid date format' });
+    }
   } catch (error) {
     reply.code(500).send({ error: 'Internal Server Error' });
   }
