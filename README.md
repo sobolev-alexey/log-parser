@@ -16,12 +16,6 @@ $ yarn
 $ yarn dev
 ```
 
-### Test
-
-```bash
-$ yarn test
-```
-
 ### Configuration
 
 Values for `PORT` and `LOG_FILE` can be configured in the provided `.env` file.  

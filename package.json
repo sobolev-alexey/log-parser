@@ -1,7 +1,10 @@
 {
   "name": "log-parser",
   "version": "1.0.0",
-  "main": "index.js",
+  "author": "Alexey Sobolev <hello@lexer.dev>",
+  "license": "MIT",
+  "repository": "sobolev-alexey/log-parser",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
