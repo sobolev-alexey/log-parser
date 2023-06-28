@@ -64,7 +64,7 @@ $ curl http://localhost:8080/queries/count/2015
 
 I have implemented three distinct solutions and conducted extensive experimentation to evaluate the advantages and disadvantages of each approach.
 
-## First solution
+## [First solution](https://github.com/sobolev-alexey/log-parser/tree/feat/index-tree)
 The application sequentially loads log files and constructs a **tree-like structure** to organize the logs based on their dates. Each log is placed in a specific node of the tree, representing the `year`, `month`, `day`, `hour`, `minute`, and `second`. For example, a log entry like  
 ```
 2015-08-01 00:04:12 query
@@ -91,14 +91,14 @@ index.get("2015").get("08").get("01") // for the range like "2015-08-01"
 ```
 Finally, it recursively traverses the narrowed sub-tree to collect all the queries, which are added to a `Set` to eliminate duplicates. The size of the `Set` represents the number of distinct queries within the specified time range.
 
-## Second solution
+## [Second solution](https://github.com/sobolev-alexey/log-parser/tree/feat/index-map-strings-compare)
 This solution utilizes a `Map` data structure, where each log entry is stored as a key-value pair, with the `timestamp` as the **key** and the `query` as the **value**.  
 After constructing the `Map`, the entries are sorted by their keys using the **Quicksort** algorithm.  
 
 To process a query within a given time range, the solution employs a **binary search** algorithm to locate the keys that are closest to the specified "begin" and "end" timestamps.  
 It then iterates over the values in the `Map` between the positions of these keys, adds the queries to a `Set` to remove duplicates, and outputs the size of the `Set` as the number of distinct queries within the desired time range.
 
-## Third solution
+## [Third solution](https://github.com/sobolev-alexey/log-parser/tree/feat/index-map-strings-compare-service-worker)
 This solution is similar to the second one, but it introduces the use of **service workers** to improve performance. **Service workers** are utilized to move the index creation process out of the main thread, reducing the impact on the user interface and improving responsiveness.  
   
 Additionally, **service workers** can be employed to process search requests within the index, further optimizing the search operation.  
@@ -111,7 +111,7 @@ By leveraging **service workers**, the solution aims to enhance parallel process
 
 To evaluate the efficiency of the provided solutions in terms of resource consumption (CPU/memory/disk space) and response times for processing millions of log file entries, let's consider the pros and cons of each solution.
 
-## First solution
+## [First solution](https://github.com/sobolev-alexey/log-parser/tree/feat/index-tree)
 
 ### Pros:
 
@@ -125,7 +125,7 @@ To evaluate the efficiency of the provided solutions in terms of resource consum
 - Complex implementation: Implementing and maintaining a tree structure can be more complex compared to other data structures. It requires careful handling of various levels and nodes, which may increase the chances of introducing bugs.
 - Limited scalability: While this solution can work well for processing log files within a given time range, it may face challenges in terms of scalability for handling extremely large log files or frequent queries on different time ranges. 
 
-## Second solution
+## [Second solution](https://github.com/sobolev-alexey/log-parser/tree/feat/index-map-strings-compare)
 
 ### Pros:
 
@@ -140,7 +140,7 @@ To evaluate the efficiency of the provided solutions in terms of resource consum
 - Limited scalability: As the number of logs grows, the search and retrieval process may become slower due to the need to iterate over a larger portion of the sorted map. 
 
 
-## Third solution
+## [Third solution](https://github.com/sobolev-alexey/log-parser/tree/feat/index-map-strings-compare-service-worker)
 
 ### Pros:
 
@@ -158,7 +158,7 @@ To evaluate the efficiency of the provided solutions in terms of resource consum
 
 # Conclusion
 
-Considering the efficiency requirements and the cons of each solution, the second solution seems to be the most efficient option. It provides a simple data structure, efficient search using binary search, and eliminates duplicates using a Set. Although it incurs some sorting overhead, it is generally a more scalable solution compared to the first solution.
+Considering the efficiency requirements and the cons of each solution, the [second solution](https://github.com/sobolev-alexey/log-parser/tree/feat/index-map-strings-compare) seems to be the most efficient option. It provides a simple data structure, efficient search using binary search, and eliminates duplicates using a Set. Although it incurs some sorting overhead, it is generally a more scalable solution compared to the first solution.
 
 For an optimal solution considering millions of log file entries, an alternative approach could be to utilize a combination of techniques:
 
