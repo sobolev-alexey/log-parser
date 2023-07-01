@@ -2,22 +2,49 @@ import fs from 'fs';
 import zlib from "zlib";
 import readline from 'readline';
 
-function getOrCreateMap(map: Map<string, any>, key: string) {
-  try {
-    // Get or create map for [key]
-    if (!map.has(key)) {
-      map.set(key, new Map<string, any>());
+function quickSortMapEntriesByKey<K, V>(map: Map<K, V>): Map<K, V> {
+  const entries = Array.from(map.entries());
+
+  function partition(left: number, right: number): number {
+    const pivot = entries[Math.floor((left + right) / 2)][0];
+
+    while (left <= right) {
+      while (entries[left][0] < pivot) {
+        left++;
+      }
+      while (entries[right][0] > pivot) {
+        right--;
+      }
+
+      if (left <= right) {
+        [entries[left], entries[right]] = [entries[right], entries[left]];
+        left++;
+        right--;
+      }
     }
-    return map.get(key);
-  } catch (error) {
-    console.error(error);
+
+    return left;
   }
+
+  function quickSort(left: number, right: number): void {
+    if (left >= right) {
+      return;
+    }
+    const index = partition(left, right);
+    quickSort(left, index - 1);
+    quickSort(index, right);
+  }
+
+  quickSort(0, entries.length - 1);
+
+  return new Map(entries);
 }
+
 
 // Function to process the log file and build the index
 export function processLogFile(filePath: string): Promise<Map<string, any>> {
   let lines = 0;
-  const index = new Map<string, any>();
+  const index = new Map();
 
   return new Promise((resolve, reject) => {
     const fileProcessing = "Processing time";
@@ -42,30 +69,25 @@ export function processLogFile(filePath: string): Promise<Map<string, any>> {
     rl.on('line', (line) => {
       lines++;
       const [dateString, query] = line.split('\t');
-      const [date, time] = dateString.split(" ");
-      const [year = dateString, month = "01", day = "01"] = (date || dateString)?.split("-");
-      const [hour = "00", minute = "00", second = "00"] = (time || "00").split(":");
 
-      const monthsMap = getOrCreateMap(index, year); // months map for index[2015]
-      const daysMap = getOrCreateMap(monthsMap, month); // days map for index[2015][08]
-      const hoursMap = getOrCreateMap(daysMap, day); // hours map for index[2015][08][03]
-      const minutesMap = getOrCreateMap(hoursMap, hour); // minutes map for index[2015][08][03][00]
-      const secondsMap = getOrCreateMap(minutesMap, minute); // seconds map for index[2015][08][03][00][04]
-      const entriesSet = secondsMap.get(second)?.size > 0 ? secondsMap.get(second) : new Set(); 
-      
-      // distinct queries within a second, e.g. index[2015][08][03][00][04][17]
-      secondsMap.set(second, entriesSet.add(query));
+      if (!index.has(dateString)) {
+        index.set(dateString, new Set<string>());
+      }
+      index.get(dateString).add(query);
+
     });
 
     // The close event displays the result of the line event callback in the terminal.
     rl.on('close', async () => {
+      const sortedIndex = quickSortMapEntriesByKey(index);
+
       console.log('Data parsing completed');
       console.log('Lines parsed', lines);
       console.timeEnd(fileProcessing);
       const used = process.memoryUsage().heapUsed / 1024 / 1024;
       console.log(`Memory used: ${Math.round(used * 100) / 100} MB`);
 
-      resolve(index);
+      resolve(sortedIndex);
     });
 
     // The error event outputs the error message in case there is one

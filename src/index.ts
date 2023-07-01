@@ -3,7 +3,6 @@ import 'dotenv/config';
 import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import { countQueriesHelper } from './helpers/searchIndex';
 import { processLogFile } from './helpers/processFile';
-import { StringOrMap } from './index.d';
 import { isValidDateFormat } from './helpers/checkDateFormat';
 
 /*
@@ -11,7 +10,7 @@ import { isValidDateFormat } from './helpers/checkDateFormat';
 */
 const logFilePath = process.env.LOG_FILE || 'hn_logs.tsv.gz';
 
-let index = new Map<string, StringOrMap>();
+let index = new Map<string, Set<string>>();
 
 // Process the log file and build the index
 processLogFile(logFilePath)
